@@ -1,0 +1,5 @@
+Path	Pixel_size	Mode	Mineral	Ratio_232_238	Ratio_147_238	Orientation2C	Shape	Nr_pyramids	Broken_tips	Zoned	Rim_width	Ratio_Rim_Core
+Test/Test-1-parC.jpg	0.3998	normal	ap	0.4444	0.0615	parallel	hexagonal	2	no	no	20	1
+Test/Test-1-parC_2.jpg	0.3995	normal	ap	0.4444	0.0615	parallel	hexagonal	2	no	no	20	1
+Test/Test-1-perC.jpg	0.3995	normal	ap	0.4444	0.0615	perpendicular	hexagonal	2	no	no	20	1
+Test/Test-1-perC3.jpg	0.3995	normal	ap	0.4444	0.0615	perpendicular	hexagonal	2	no	no	20	1
