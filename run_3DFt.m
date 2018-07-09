@@ -17,8 +17,8 @@
 %              'zr - 1' zircon grain
 % 5. Ratio_232_238: ratio of 232Th and 238U, measured in mol; if 0, mean values are used
 % 6. Ratio_147_238: ratio of 147Sm and 238U, measured in mol; if 0 mean values are used
-% 7. Orientation2C: defines the orientation of the crystal c-axis to the
-%    field of view
+% 7. Orientation2C: defines the orientation of the crystal c-axis to the field of view
+%         parallel - 0, perpendicular - 1
 % 8. Shape: hexagonal - 0, ellipsoid - 1, cylinder - 2, block - 3 (analytical equations from Ketcham et al. 2011)
 % 9. Nr_pyramids: number of pyramids, required for analytical calculation
 % 10. Broken_tips: true or false
@@ -40,63 +40,59 @@ exit
 IPT = readtable(input_file);
 
 % open image files and resize to 2 microns (ps=pixel size)
-per=0; par=0;
-par_I=[]; per_I=[];
-ps=2;
-for i=1:size(IPT,1)
+per = 0; par = 0;
+par_I = []; per_I = [];
+ps = 2;
+
+for i = 1:size(IPT, 1)
     % open image
     switch char(IPT.Orientation2C(i))
-        case 'parallel'
-            par=par+1;
-            image_name=['image_par' num2str(par)];
-            par_I=[par_I i];
-        case 'perpendicular'
-            per=per+1;
-            image_name=['image_per' num2str(per)];
-            per_I=[per_I i];
+    case '0' % parallel
+            par = par + 1;
+            image_name = ['image_par' num2str(par)];
+            par_I = [par_I i];
+        case '1' % perpendicular
+            per = per + 1;
+            image_name = ['image_per' num2str(per)];
+            per_I = [per_I i];
     end
-    image=imread(char(IPT.Path(i)));
-    % resize image
-    scale=IPT.Pixel_size(i)/ps;
-    image=imresize(image,scale);
-    images.(image_name)=image;
 end
 
-o=0;
-done_par=[];
-done_per=[];
-for j=1:par
-    for k=1:per
-        o=o+1;
+o = 0;
+done_par = [];
+done_per = [];
+for j = 1:par
+    for k = 1:per
+        o = o + 1;
         [path1, name1, ext1] = fileparts(char(IPT.Path(par_I(j))));
-        [path2, name2, ext2] = fileparts(char(IPT.Path(par_I(k))));
-        picture_combination(o,:)=string(strcat(name1, ext1,'<>', name2, ext2));
-        if any(done_par==j)
-            image_par=images.(['image_par' num2str(j)]);
-            image_par_broken=images.(['image_par_broken' num2str(j)]);
+        [path2, name2, ext2] = fileparts(char(IPT.Path(per_I(k))));
+        picture_combination(o,:) = string(strcat(name1, ext1,'<>', name2, ext2));
+        if any(done_par == j)
+            image_par = images.(['image_par' num2str(j)]);
+            image_par_broken = images.(['image_par_broken' num2str(j)]);
         else
-            image_par=[];
-            image_par_broken=[];
+            image_par = [];
+            image_par_broken = [];
         end
-        if any(done_per==k)
-            image_per=images.(['image_per' num2str(k)]);
+        if any(done_per == k)
+            image_per = images.(['image_per' num2str(k)]);
         else
-            image_per=[];
+            image_per = [];
         end
         switch char(IPT.Mode(1))
-            case 'normal'
+            case '0' % normal
             % calculate Fts of intact or broken grains
-            [Results(o),vol_photo,images.(['image_par' num2str(j)]),images.(['image_par_broken' num2str(j)]),images.(['image_per' num2str(k)])]=calcFTphoto(IPT,images.(['image_par' num2str(j)]),images.(['image_per' num2str(k)]),ps,image_par,image_par_broken,image_per);
-            case 'cut'
+            [Results(o), vol_photo, images.(['image_par' num2str(j)]), images.(['image_par_broken' num2str(j)]), images.(['image_per' num2str(k)])] = calcFTphoto(IPT, images.(['image_par' num2str(j)]), images.(['image_per' num2str(k)]), ps, image_par, image_par_broken, image_per);
+            case '1' % cut
             % calculate Fts of grains cut by polishing parallel to the c-axis
-            [Results(o),vol_photo]=calcFTphotoCut(IPT,images.(['image_par' num2str(j)]),images.(['image_per' num2str(k)]));
+            [Results(o), vol_photo] = calcFTphotoCut(IPT, images.(['image_par' num2str(j)]), images.(['image_per' num2str(k)]));
         end
-        done_par=[done_par j];
-        done_per=[done_per k];
+        done_par = [done_par j];
+        done_per = [done_per k];
         %% calculate sphere-equivalent radius (ser)
 
         % calculate the volume
-        V_num(o)=sum(vol_photo(:))*(ps)^3;
+        V_num(o) = sum(vol_photo(:)) * (ps)^3;
 
         % calculate surface area
         fv = isosurface(vol_photo,0.5);
