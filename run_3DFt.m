@@ -29,13 +29,13 @@
 
 input_file = fullfile(grain_folder, input_file);
 output_file = fullfile(grain_folder, output_file);
-
-
-display(input_file)
-display(output_file)
-display(grain_folder)
-
-exit
+%
+%
+% display(input_file)
+% display(output_file)
+% display(grain_folder)
+%
+% exit
 
 IPT = readtable(input_file);
 
@@ -44,16 +44,23 @@ per = 0; par = 0;
 par_I = []; per_I = [];
 ps = 2;
 
+
 for i = 1:size(IPT, 1)
-    % open image
-    switch char(IPT.Orientation2C(i))
-    case '0' % parallel
+    % create image from txt-file
+    outline=readtable(char(IPT.coordinateFile(i)));
+    X=[outline.Var1(1:2:end); flipud(outline.Var1(2:2:end))];
+    Y=[outline.Var2(1:2:end); flipud(outline.Var2(2:2:end))];
+    BW=poly2mask(X,Y,max(Y)+50,max(X)+50);
+    switch char(IPT.orientation(i))
+        case 'parallel'
             par = par + 1;
             image_name = ['image_par' num2str(par)];
+            images.(image_name)=BW;
             par_I = [par_I i];
-        case '1' % perpendicular
+        case 'perpendicular'
             per = per + 1;
             image_name = ['image_per' num2str(per)];
+            images.(image_name)=BW;
             per_I = [per_I i];
     end
 end
@@ -64,8 +71,8 @@ done_per = [];
 for j = 1:par
     for k = 1:per
         o = o + 1;
-        [path1, name1, ext1] = fileparts(char(IPT.Path(par_I(j))));
-        [path2, name2, ext2] = fileparts(char(IPT.Path(per_I(k))));
+        [path1, name1, ext1] = fileparts(char(IPT.coordinateFile(par_I(j))));
+        [path2, name2, ext2] = fileparts(char(IPT.coordinateFile(per_I(k))));
         picture_combination(o,:) = string(strcat(name1, ext1,'<>', name2, ext2));
         if any(done_par == j)
             image_par = images.(['image_par' num2str(j)]);
@@ -79,11 +86,11 @@ for j = 1:par
         else
             image_per = [];
         end
-        switch char(IPT.Mode(1))
-            case '0' % normal
+        switch char(IPT.mode(1))
+            case 'normal'
             % calculate Fts of intact or broken grains
             [Results(o), vol_photo, images.(['image_par' num2str(j)]), images.(['image_par_broken' num2str(j)]), images.(['image_per' num2str(k)])] = calcFTphoto(IPT, images.(['image_par' num2str(j)]), images.(['image_per' num2str(k)]), ps, image_par, image_par_broken, image_per);
-            case '1' % cut
+            case 'cut'
             % calculate Fts of grains cut by polishing parallel to the c-axis
             [Results(o), vol_photo] = calcFTphotoCut(IPT, images.(['image_par' num2str(j)]), images.(['image_per' num2str(k)]));
         end
